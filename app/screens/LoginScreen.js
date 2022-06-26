@@ -39,13 +39,11 @@ const SignInScreen = ({ navigation }) => {
   const handleSubmit = async (data) => {
     loginApi.setLoading(true);
     const res = await loginApi.request(data);
-    console.log("====================================");
-    console.log(res);
-    console.log("====================================");
     if (!res.ok) return setError(true);
-    auth.logIn({ ...res.data });
     loginApi.setLoading(false);
+    auth.logIn({ ...res.data });
   };
+  wth;
 
   return (
     <Screen style={styles.container}>
