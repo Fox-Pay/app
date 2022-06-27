@@ -59,15 +59,17 @@ const styles = StyleSheet.create({
   texti: {
     marginTop: 2,
     fontSize: 14,
-    color: "rgba(0,0,0,0.5)",
+    color: colors.medium,
+    fontFamily: fonts.PoppinsRegular,
   },
   textii: {
     fontSize: 16,
     color: colors.primary,
+    fontFamily: fonts.PoppinsBold,
   },
   textiii: {
     fontSize: 14,
-    color: "rgba(0,0,0,0.3)",
+    color: colors.medium,
   },
   text: {
     fontSize: 16,

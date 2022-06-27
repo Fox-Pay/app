@@ -20,13 +20,13 @@ import {
   SubmitButton,
 } from "../components/forms";
 import authApi from "../api/auth";
-import useApi from "../hooks/useApi";
-import useAuth from "../hooks/useAuth";
-import ActivityIndicator from "../components/ActivityIndicator";
-import storage from "../api/storage";
-import validators from "../utils/validators";
 import fonts from "../config/fonts";
+import useApi from "../hooks/useApi";
+import storage from "../api/storage";
+import useAuth from "../hooks/useAuth";
 import routes from "../navigation/routes";
+import validators from "../utils/validators";
+import ActivityIndicator from "../components/ActivityIndicator";
 
 const Dim = Dimensions.get("screen");
 
@@ -43,7 +43,6 @@ const SignInScreen = ({ navigation }) => {
     loginApi.setLoading(false);
     auth.logIn({ ...res.data });
   };
-  wth;
 
   return (
     <Screen style={styles.container}>
@@ -55,11 +54,8 @@ const SignInScreen = ({ navigation }) => {
         )}
         onSubmit={handleSubmit}
       >
-        <Text style={styles.subtitle}>Welcome to</Text>
+        <Text style={styles.subtitle}>Sigin In</Text>
         <Image source={require("../assets/icon.png")} style={styles.logo} />
-        <Text style={[styles.title, commonStyles.spacingTopBottom]}>
-          FoxPay
-        </Text>
         <View style={styles.errorContainer}>
           <ErrorMessage error="Invalid Username or Password" visible={error} />
         </View>
@@ -104,11 +100,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 200,
+    height: 200,
   },
   inputsContainer: {
-    width: Dim.width * 0.9,
+    width: Dim.width,
     paddingHorizontal: 15,
   },
   title: {
@@ -118,6 +114,7 @@ const styles = StyleSheet.create({
   },
   button: {
     alignSelf: "center",
+    width: Dim.width *0.9
   },
   subtitle: {
     fontSize: 18,

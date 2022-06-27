@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Image,
-  Modal,
   Alert,
-  ScrollView,
   StyleSheet,
   Dimensions,
-  ImageBackground,
+  ScrollView,
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import fonts from "../config/fonts";
@@ -32,44 +31,45 @@ import apis from "../api/api";
 import fsiApis from "../api/fsi";
 import useApi from "../hooks/useApi";
 import useAuth from "../hooks/useAuth";
-import validators from "../utils/validators";
-import Success from "../components/Success";
 import routes from "../navigation/routes";
+import Success from "../components/Success";
+import validators from "../utils/validators";
+import BottomSheet from "../components/BottomSheet";
 
 const Dim = Dimensions.get("screen");
 
 const contacts = [
   {
-    phone: "08165088821",
+    phone: "+142365088821",
     name: "Fateema Aliyu",
     face: require("../assets/temp/face4.jpg"),
   },
   {
-    phone: "08140099331",
+    phone: "+2338140099331",
     name: "Umar Adamu",
     face: require("../assets/temp/face.jpg"),
   },
   {
-    phone: "07033389645",
+    phone: "+2347033389645",
     name: "Abdoulrasheed",
     face: require("../assets/temp/face2.jpg"),
   },
   {
-    phone: "08098394218",
+    phone: "+2338098394218",
     name: "Jameema James",
     face: require("../assets/temp/face3.jpg"),
   },
   {
-    phone: "08023234323",
+    phone: "+1802334323",
     name: "Miracle John",
     face: require("../assets/temp/face5.jpg"),
   },
   {
-    phone: "07033389645",
+    phone: "+2349133389645",
     name: "Maryam Ibrahim",
   },
   {
-    phone: "07033389645",
+    phone: "+2347053423494",
     name: "Joseph Jonah",
   },
 ];
@@ -85,7 +85,7 @@ const history = [
     },
     receiver: {
       full_name: "Fateema Ibrahim",
-      phone_number: "07033389645",
+      phone_number: "+2347033389645",
     },
   },
   {
@@ -97,30 +97,46 @@ const history = [
       last_name: "Ibrahim",
     },
     receiver: {
-      full_name: "Fateema Ibrahim",
-      phone_number: "07033389645",
+      full_name: "Aliyu Idris",
+      phone_number: "+23481230340934",
     },
   },
 ];
 
 const DashboardScreen = ({ navigation }) => {
-  const {
-    user: { user },
-    logOut,
-  } = useAuth();
+  const { user, logOut } = useAuth();
   const [config, setConfig] = useState();
   const confiApi = useApi(apis.getConfig);
   const [error, setError] = useState(false);
   const transferApi = useApi(fsiApis.transfer);
   const [success, setSuccess] = useState(false);
-  const [activeContact, setActiveContact] = useState();
+  const [amountSent, setAmountSent] = useState(0);
   const transactionApi = useApi(apis.createTransaction);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [activeContact, setActiveContact] = useState({});
   const [balanceVisible, setBalanceVisible] = useState(false);
+
+  const sheetRef = useRef(null);
+
+  const getCountry = () => {
+    if(!activeContact?.phone) return;
+
+    const string = activeContact.phone.slice(0, 4);
+
+    switch(string){
+      case "+234":
+        return "Nigeria";
+      case "+233":
+        return "Ghana";
+      case "+254":
+        return "Kenya";
+      default:
+        return "USA";
+    }
+  }
 
   const handleSend = (item) => {
     setActiveContact(item);
-    setModalVisible(true);
+    sheetRef.current?.present();
   };
 
   const handleSubmit = async (data) => {
@@ -128,28 +144,33 @@ const DashboardScreen = ({ navigation }) => {
 
     // transfer money
     const refNumber = Math.floor(100000 + Math.random() * 10000000);
-    const transferInput = {
-      Amount: data.amount,
-      Narration: "Transfer",
-      DestinationBankCode: "030",
-      DestinationAccountName: "FoxPay",
-      SourceAccountNumber: user.account_number,
-      DestinationAccountNumber: config.account_number,
-      PaymentReference: refNumber,
-      OriginatorName: `${user.first_name} ${user.last_name} ${user.other_name}`,
-    };
-    const transferRes = await transferApi.request(transferInput);
-    if (!transferRes.ok) return setError(true);
+    // const transferInput = {
+    //   Amount: data.amount,
+    //   Narration: "Transfer",
+    //   DestinationBankCode: "030",
+    //   DestinationAccountName: "FoxPay",
+    //   SourceAccountNumber: user.account_number,
+    //   DestinationAccountNumber: config.account_number,
+    //   PaymentReference: refNumber,
+    //   OriginatorName: `${user.first_name} ${user.last_name} ${user.other_name}`,
+    // };
+    // const transferRes = await transferApi.request(transferInput);
+    // if (!transferRes.ok) return setError(true);
 
     // create record of transaction
     const transactionRes = await transactionApi.request({
       name: activeContact.name,
       phone: activeContact.phone,
       amount: data.amount,
-      sender: user.id,
+      sender: user.user.id,
       hash: refNumber,
     });
 
+    console.log('====================================');
+    console.log(transactionRes);
+    console.log('====================================');
+
+    setAmountSent(data.amount);
     if (transactionRes.ok) setSuccess(true);
     transferApi.setLoading(false);
   };
@@ -167,14 +188,11 @@ const DashboardScreen = ({ navigation }) => {
 
   return (
     <Screen style={styles.container}>
-      <ImageBackground
-        style={styles.imgbg}
-        source={require("../assets/topbg.png")}
-      >
+      <LinearGradient colors={[colors.primary, 'transparent']}>
         <View style={styles.top}>
           <View>
             <Text style={styles.title}>
-              {balanceVisible ? `N${helpers.formatCurrency(21438)}` : "XXXXXXX"}
+              {balanceVisible ? `N${helpers.formatCurrency(+user?.wallet?.balance || 0)}` : "XXXXXXX"}
             </Text>
             <View style={styles.subtitleContainer}>
               <Text style={styles.subtitle}>Account Balance</Text>
@@ -244,7 +262,7 @@ const DashboardScreen = ({ navigation }) => {
                 color={colors.primary}
               />
             </View>
-            <Text style={styles.text}>Redeem</Text>
+            <Text style={styles.text}>Withdraw</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.card}>
             <View style={styles.icon}>
@@ -257,7 +275,7 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.text}>History</Text>
           </TouchableOpacity>
         </View>
-      </ImageBackground>
+      </LinearGradient>
       <View style={styles.body}>
         <View style={styles.bodyTop}>
           <Text style={styles.textI}>Your contacts</Text>
@@ -305,72 +323,50 @@ const DashboardScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <Modal visible={modalVisible} animationType="fade" transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modal}>
-            <View style={styles.modalHeader}>
-              <View>
-                <Text style={styles.modalTitle}>Share money with:</Text>
-                <Text style={styles.modalSubtitle}>{activeContact?.name}:</Text>
-                <Text style={styles.modalSubtitleI}>
-                  {activeContact?.phone}:
-                </Text>
-              </View>
-              <Ionicons
-                name="close-circle"
-                size={34}
-                color={colors.danger}
-                onPress={() => {
-                  setActiveContact(null);
-                  setModalVisible(false);
-                }}
-              />
-            </View>
-            <View>
-              {success ? (
-                <Success
-                  visible={true}
-                  title="N5,000"
-                  subtitle={`was successfully sent`}
-                />
-              ) : (
-                <Form
-                  validationSchema={validators.sendMoneySchema}
-                  initialValues={helpers.getInitialValuesFromSchema(
-                    validators.sendMoneySchema
-                  )}
-                  onSubmit={handleSubmit}
-                >
-                  <View>
-                    <FormField
-                      name="amount"
-                      keyboardType="number-pad"
-                      placeholder="Enter Amount"
-                      style={styles.customInput}
-                    />
-                    <FormField
-                      name={"pin"}
-                      secureTextEntry
-                      placeholder={"Enter PIN"}
-                      keyboardType={"number-pad"}
-                      style={styles.customInput}
-                    />
-                    <View style={styles.error}>
-                      <ErrorMessage error="An error occured" visible={error} />
-                    </View>
-                    <SubmitButton
-                      style={styles.button}
-                      title={"PROCEED TO SEND"}
-                      loadingText={"PROCESSING..."}
-                      loading={transferApi.loading}
-                    />
-                  </View>
-                </Form>
+      <BottomSheet snapPoints={['50%']} title={`Send money to: ${activeContact.name}`} subtitle={`${activeContact.phone}  (${getCountry()})`} ref={sheetRef} >
+        <View style={styles.modal}>
+          {success ? (
+            <Success
+              visible={true}
+              title={`N${amountSent}`}
+              subtitle={`N${amountSent} was successfully sent`}
+            />
+          ) : (
+            <Form
+              validationSchema={validators.sendMoneySchema}
+              initialValues={helpers.getInitialValuesFromSchema(
+                validators.sendMoneySchema
               )}
-            </View>
-          </View>
+              onSubmit={handleSubmit}
+            >
+              <View>
+                <FormField
+                  name="amount"
+                  placeholder="Amount"
+                  keyboardType="number-pad"
+                  style={styles.customInput}
+                />
+                <FormField
+                  name={"pin"}
+                  secureTextEntry
+                  style={styles.customInput}
+                  keyboardType={"number-pad"}
+                  placeholder={"Comfirm Transaction PIN"}
+                />
+                <View style={styles.error}>
+                  <ErrorMessage error="An error occured" visible={error} />
+                </View>
+                <SubmitButton
+                  title={"Send"}
+                  style={styles.button}
+                  loadingText={"PROCESSING..."}
+                  loading={transferApi.loading}
+                />
+              </View>
+            </Form>
+          )}
         </View>
-      </Modal>
+      </BottomSheet>
     </Screen>
   );
 };
@@ -405,6 +401,7 @@ const styles = StyleSheet.create({
   },
   button: {
     alignSelf: "center",
+    width: Dim.width * 0.9,
   },
   cardsContainer: {
     height: 50,
@@ -425,8 +422,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   customInput: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.primary,
+    backgroundColor: colors.background,
   },
   card: {
     width: 60,
@@ -439,7 +435,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     justifyContent: "space-between",
   },
-  imgbg: {},
   img: {
     width: 60,
     height: 60,
@@ -489,37 +484,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  modalContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(18,57,98,0.8)",
-  },
   modal: {
-    padding: 10,
-    borderRadius: 10,
-    width: Dim.width * 0.9,
-    height: Dim.height * 0.4,
-    backgroundColor: colors.white,
-  },
-  modalHeader: {
-    borderBottomWidth: 1,
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    borderBottomColor: "rgba(0,0,0,0.1)",
-  },
-  modalTitle: {
-    fontSize: 16,
-    color: "rgba(0,0,0,0.8)",
-    fontFamily: fonts.PoppinsRegular,
-  },
-  modalSubtitle: {
-    fontSize: 14,
-  },
-  modalSubtitleI: {
-    fontSize: 12,
-    color: "rgba(0,0,0,0.5)",
+    alignItems: "center"
   },
 });
 

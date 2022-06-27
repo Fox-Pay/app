@@ -1,7 +1,7 @@
 import { create } from "apisauce";
 
 export const appClient = create({
-  baseURL: "http://foxpay.pythonanywhere.com",
+  baseURL: "https://foxxpay.herokuapp.com",
 });
 
 export const fsiClient = create({

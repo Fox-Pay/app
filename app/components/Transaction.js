@@ -69,10 +69,12 @@ const styles = StyleSheet.create({
   textii: {
     fontSize: 16,
     color: colors.primary,
+    fontFamily:fonts.PoppinsBold,
   },
   textiii: {
     fontSize: 14,
-    color: "rgba(0,0,0,0.3)",
+    color: colors.medium,
+    fontFamily: fonts.PoppinsBold,
   },
   text: {
     fontSize: 16,

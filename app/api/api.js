@@ -15,10 +15,13 @@ const createTransaction = (data) => {
   return client.post("/api/transactions/", formdata);
 };
 
+const updateTransaction = ({ id }) => client.post(`/api/update_transaction/?tx_id=${id}`);
+
 const apis = {
   search,
   getConfig,
   getTransactions,
+  updateTransaction,
   createTransaction,
 };
 

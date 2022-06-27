@@ -21,6 +21,7 @@ const Success = ({ title, subtitle, visible }) => {
       <LottieView
         autoPlay
         speed={1}
+        loop={false}
         style={styles.indicator}
         source={require("../assets/animations/success.json")}
       />

@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import {
   View,
   StyleSheet,
-  ImageBackground,
+  Dimensions,
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
+
 
 import fonts from "../config/fonts";
 import Text from "../components/Text";
@@ -20,6 +22,8 @@ import apis from "../api/api";
 import fsiApis from "../api/fsi";
 import Success from "../components/Success";
 
+const Dim = Dimensions.get("screen");
+
 const RedeemCashScreen = ({ navigation }) => {
   const [otp, setOtp] = useState();
   const searchApi = useApi(apis.search);
@@ -29,6 +33,7 @@ const RedeemCashScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [transactions, setTransactions] = useState([]);
+  const updateTransactionApi = useApi(apis.updateTransaction);
   const [activeTransaction, setActiveTransaction] = useState({});
 
   const handleSearch = async () => {
@@ -36,6 +41,7 @@ const RedeemCashScreen = ({ navigation }) => {
 
     setSearching(true);
     const res = await searchApi.request(phone);
+
     if (res.ok) setTransactions(res.data);
     setSearching(false);
   };
@@ -48,15 +54,16 @@ const RedeemCashScreen = ({ navigation }) => {
       name: `${transaction.sender.first_name} ${transaction.sender.last_name} ${transaction.sender.other_name}`,
     });
     if (res.ok) setOtp(res.data.data[0]);
+    const appres = await updateTransactionApi.request({ id: transaction.id });
+    console.log(appres);
     setLoading(false);
   };
 
   return (
     <Screen style={styles.container}>
-      <ImageBackground
-        imageStyle={styles.bg}
-        source={require("../assets/topbgsm.png")}
+      <LinearGradient
         style={styles.header}
+        colors={['rgba(0,0,0,0.8)', 'transparent']}
       >
         <TouchableOpacity
           style={styles.iconContainer}
@@ -65,10 +72,10 @@ const RedeemCashScreen = ({ navigation }) => {
           <Ionicons name="arrow-back-sharp" size={15} color={colors.white} />
         </TouchableOpacity>
         <Text style={styles.title}>Redeem Cash</Text>
-      </ImageBackground>
+      </LinearGradient>
       <View style={styles.body}>
         <TextInput
-          maxLength={11}
+          maxLength={15}
           style={styles.input}
           keyboardType="phone-pad"
           placeholder="Enter phone number"
@@ -107,13 +114,14 @@ const RedeemCashScreen = ({ navigation }) => {
               />
               <TextInput
                 maxLength={6}
+                secureTextEntry
                 style={styles.input}
                 placeholder="Access PIN"
                 keyboardType="number-pad"
               />
               <Button
                 style={styles.button}
-                title="PROCEED"
+                title="Proceed"
                 onPress={() => setSuccess(true)}
               />
             </View>
@@ -140,10 +148,10 @@ const RedeemCashScreen = ({ navigation }) => {
                 </Text>
               </Text>
               <Button
-                title="CLAIM"
+                title="Claim"
                 loading={loading}
                 style={styles.button}
-                loadingText="PROCESSING..."
+                loadingText="Processing..."
                 onPress={() => {
                   setActiveTransaction(transaction);
                   handleClaim(transaction);
@@ -238,6 +246,7 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 20,
     alignSelf: "center",
+    width: Dim.width * 0.8,
   },
   input: {
     borderBottomWidth: 1,

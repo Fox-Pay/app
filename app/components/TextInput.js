@@ -1,17 +1,18 @@
 import React from "react";
 import colors from "../config/colors";
 
-import { View, TextInput, StyleSheet } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-
 import commonStyles from "../config/styles";
+import { Ionicons } from "@expo/vector-icons";
+import { View, TextInput, StyleSheet, Dimensions } from "react-native";
+
+const Dim = Dimensions.get("screen");
 
 const AppTextInput = ({
   icon,
   style,
   margin = 10,
   onIconPress,
-  width = "100%",
+  width = Dim.width * 0.9,
   ...otherProps
 }) => {
   return (
@@ -35,7 +36,8 @@ const AppTextInput = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 15,
+    height: 55,
+    borderRadius: 10,
     alignItems: "center",
     flexDirection: "row",
     paddingHorizontal: 25,
